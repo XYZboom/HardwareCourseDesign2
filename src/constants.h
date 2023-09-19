@@ -73,4 +73,7 @@
 #define UART_CHANNEL_STS_REG0           (* (volatile unsigned long *) 0xE000102C)
 //</editor-fold>
 
+// 前导码
+#define MODBUS_PREAMBLE ((unsigned char) 0x23)
+
 #endif //DESIGN2_PROJECT_CONSTANTS_H
