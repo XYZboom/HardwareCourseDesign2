@@ -6,5 +6,5 @@
 #include <unistd.h>
 
 void sleep_ms(long ms) {
-	usleep(5000000);
+	usleep(ms * 1000);
 }
