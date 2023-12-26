@@ -75,5 +75,12 @@
 
 // 前导码
 #define MODBUS_PREAMBLE ((unsigned char) 0x23)
+#ifdef SIMULATION
+#include <windows.h>
+#define SIMULATION_COM ("COM2")
+#define DEBUG_COM_BUFFER_SIZE (16)
+#define DEBUG_COM_BAUD_RATE (CBR_115200)
+extern HANDLE COM_HANDLE;
+#endif
 
 #endif //DESIGN2_PROJECT_CONSTANTS_H
