@@ -3,6 +3,7 @@
 //
 
 #include "uart.h"
+#include "time_utils.h"
 #include "constants.h"
 #include "logger.h"
 #ifdef SIMULATION
@@ -71,8 +72,11 @@ void clearData() {
         PurgeComm(COM_HANDLE, PURGE_RXCLEAR);
     }
 #else
-    while (hasData()) {
-        receiveChar();
+    for (int i = 0; i < 1500; ++i) {
+        while (hasData()) {
+            receiveChar();
+        }
+        sleep_ms(1);
     }
 #endif
 }

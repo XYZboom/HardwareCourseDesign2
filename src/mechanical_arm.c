@@ -240,8 +240,8 @@ void arm2TransformChest() {
     sendConveyerBeltCtrl(NO_BELT, OPEN_BELT);
     LOG("DEBUG", "%s", "arm2PickUpPlace");
     arm2PickUpPlace();
-    sleep_ms(9000);
     clearData();
+    sleep_ms(9000);
     LOG("DEBUG", "%s", "arm2 suck");
     sendSuckCtrl(NO_SUCK_ACTION, DO_SUCK, NO_SUCK_ACTION);
     // printf("%c\n", receiveChar());
