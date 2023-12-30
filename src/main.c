@@ -1,10 +1,10 @@
+#include <logger.h>
 #include <stdbool.h>
 
 #include "init.h"
 #include "mechanical_arm.h"
 #include "chest.h"
 #include "time_utils.h"
-#include "led.h"
 
 int main() {
     init();
@@ -14,10 +14,14 @@ int main() {
             showLed(i);
             sleep_ms(200);
         }*/
+        LOG("DEBUG", "%s", "sendChestCtrl 1 out");
         sendChestCtrl(OUT_CHEST, NO_CHEST, NO_CHEST);
+        LOG("DEBUG", "%s", "arm1Up");
         arm1Up();
         sleep_ms(1000);
-        arm1Left();
+        LOG("DEBUG", "%s", "arm1PickUpPlace");
+        arm1PickUpPlace();
+        sleep_ms(6000);
         sendSuckCtrl(DO_SUCK, NO_SUCK_ACTION, NO_SUCK_ACTION);
         sleep_ms(2500000);
         sendArmCtrl(ctrl);

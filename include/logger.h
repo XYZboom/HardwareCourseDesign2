@@ -9,7 +9,11 @@
 
 #include <stdio.h>
 
+#ifdef SIMULATION
 #define LOG(TAG, FORMAT, ...) fprintf(stdout, "[" TAG "] %s %s [%s:%d] " FORMAT "\r\n", __DATE__, __TIME__, __FILE__, __LINE__, __VA_ARGS__)
+#else
+#define LOG(TAG, FORMAT, ...) ;
+#endif
 #endif
 
 #endif //DESIGN2_PROJECT_LOGGER_H

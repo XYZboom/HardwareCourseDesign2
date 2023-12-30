@@ -56,7 +56,7 @@ void armTo(enum ArmAddress address, struct ArmState target);
 
 void arm1Up();
 
-void arm1Left();
+void arm1PickUpPlace();
 
 void sendSuckCtrl(enum ArmSuckCtrl ctrl1, enum ArmSuckCtrl ctrl2, enum ArmSuckCtrl ctrl3);
 

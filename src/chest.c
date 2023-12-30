@@ -14,6 +14,6 @@ void sendChestCtrl(enum ChestCtrl ctrl1, enum ChestCtrl ctrl2, enum ChestCtrl ct
 	sendChar(ctrl3);
 	// 剩余4个控制命令为默认值
 	for (int i = 0; i < 4; ++i) {
-		sendChar(0);
+		sendChar('0');
 	}
 }
