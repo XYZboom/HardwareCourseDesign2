@@ -2,6 +2,7 @@
 #include <conveyer_belt.h>
 #include <logger.h>
 #include <stdbool.h>
+#include <uart.h>
 
 #include "init.h"
 #include "mechanical_arm.h"
@@ -31,6 +32,7 @@ int main() {
         sleep_ms(9000);
         LOG("DEBUG", "%s", "arm2 suck");
         sendSuckCtrl(NO_SUCK_ACTION, DO_SUCK, NO_SUCK_ACTION);
+        printf("%c\n", receiveChar());
         LOG("DEBUG", "%s", "arm2TransformPlace");
         arm2TransformPlace();
         LOG("DEBUG", "%s", "arm2PickDownPlace");

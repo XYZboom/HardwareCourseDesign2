@@ -7,6 +7,8 @@
 
 void sendChar(unsigned char data);
 
+unsigned char receiveChar();
+
 void sendString(const char *string);
 
 #endif //DESIGN2_PROJECT_UART_H

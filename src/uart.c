@@ -28,6 +28,26 @@ void sendChar(unsigned char data) {
 #endif
 }
 
+unsigned char receiveChar() {
+#ifdef SIMULATION
+	assert(COM_HANDLE != NULL);
+	unsigned char recv_data[1];
+	DWORD recv_len;
+	BOOL flag = FALSE;
+	flag = ReadFile(COM_HANDLE, recv_data, sizeof(recv_data), &recv_len, NULL);
+	if (!flag) {
+		LOG("DEBUG", "%s %s", "Receive Message Error,COM:", SIMULATION_COM);
+	} else if (recv_len != 1) {
+		LOG("DEBUG", "%s %s", "Receive Message Length Error,COM:", SIMULATION_COM);
+	}
+	return recv_data[0];
+#else
+	while ((UART_CHANNEL_STS_REG0 & 0x2) == 0x2);
+	const char data = UART_Tx_Rx_FIFO0;
+	return data;
+#endif
+}
+
 void sendString(const char *string) {
 	while (*string) {
 		sendChar(*string++);

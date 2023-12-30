@@ -163,6 +163,20 @@ void arm2PickDownPlace() {
     armTo(ARM_2_ADDRESS, state);
 }
 
+enum ChestColor getChestColor() {
+    const unsigned char data = receiveChar();
+    switch (data) {
+        case 'R':
+            return RED;
+        case 'B':
+            return BLUE;
+        case 'G':
+            return GREEN;
+        default:
+            return GREEN;
+    }
+}
+
 void arm1Up() {
     struct ArmState state = {{0, 0, -90, 0, 180, 0}};
     armTo(ARM_1_ADDRESS, state);
