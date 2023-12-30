@@ -58,6 +58,12 @@ void arm1Up();
 
 void arm1PickUpPlace();
 
+void arm2PickUpPlace();
+
+void arm2TransformPlace();
+
+void arm2PickDownPlace();
+
 void sendSuckCtrl(enum ArmSuckCtrl ctrl1, enum ArmSuckCtrl ctrl2, enum ArmSuckCtrl ctrl3);
 
 #endif //DESIGN2_PROJECT_MECHANICAL_ARM_H

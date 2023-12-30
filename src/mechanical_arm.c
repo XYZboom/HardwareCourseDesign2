@@ -8,10 +8,41 @@
 #include "constants.h"
 #include "time_utils.h"
 
+int armNow[] = {0, 0, 0, 0, 0, 0};
+int armPos = 0;
+
 void sendArmCtrl(struct ArmCtrl ctrl) {
     sendChar(MODBUS_PREAMBLE);
     sendChar(ctrl.address);
     for (int i = 0; i < AXLE_NUM; ++i) {
+        switch (ctrl.rotateCtrl[i]) {
+            case NO_ROTATE:
+                break;
+            case CLOCKWISE_1_DEGREE:
+                armNow[i] += 1;
+                break;
+            case CLOCKWISE_2_DEGREE:
+                armNow[i] += 2;
+                break;
+            case CLOCKWISE_3_DEGREE:
+                armNow[i] += 3;
+                break;
+            case CLOCKWISE_5_DEGREE:
+                armNow[i] += 5;
+                break;
+            case ANTICLOCKWISE_1_DEGREE:
+                armNow[i] -= 1;
+                break;
+            case ANTICLOCKWISE_2_DEGREE:
+                armNow[i] -= 2;
+                break;
+            case ANTICLOCKWISE_3_DEGREE:
+                armNow[i] -= 3;
+                break;
+            case ANTICLOCKWISE_5_DEGREE:
+                armNow[i] -= 5;
+                break;
+        }
         sendChar(ctrl.rotateCtrl[i]);
     }
     if (ctrl.address == ARM_1_ADDRESS) {
@@ -21,10 +52,11 @@ void sendArmCtrl(struct ArmCtrl ctrl) {
     }
 }
 
-int arm1Now[] = {0, 0, 0, 0, 0, 0};
 
 void sendEmptyArmCtrl(enum ArmAddress address) {
-    const struct ArmCtrl emptyCtrl = {address, {NO_ROTATE, NO_ROTATE, NO_ROTATE, NO_ROTATE, NO_ROTATE, NO_ROTATE}, NO_MOVE};
+    const struct ArmCtrl emptyCtrl = {
+        address, {NO_ROTATE, NO_ROTATE, NO_ROTATE, NO_ROTATE, NO_ROTATE, NO_ROTATE}, NO_MOVE
+    };
     sendArmCtrl(emptyCtrl);
 }
 
@@ -34,7 +66,7 @@ void armTo(enum ArmAddress address, struct ArmState target) {
     while (true) {
         bool end = true;
         for (int i = 0; i < AXLE_NUM; ++i) {
-            int need = (target.degree[i] - arm1Now[i]) % 360;
+            int need = (target.degree[i] - armNow[i]) % 360;
             if (need == 0) {
                 armCtrl.rotateCtrl[i] = NO_ROTATE;
             } else {
@@ -46,30 +78,40 @@ void armTo(enum ArmAddress address, struct ArmState target) {
                 }
                 if (need >= 5) {
                     armCtrl.rotateCtrl[i] = CLOCKWISE_5_DEGREE;
-                    arm1Now[i] += 5;
                 } else if (need >= 3) {
                     armCtrl.rotateCtrl[i] = CLOCKWISE_3_DEGREE;
-                    arm1Now[i] += 3;
                 } else if (need == 2) {
                     armCtrl.rotateCtrl[i] = CLOCKWISE_2_DEGREE;
-                    arm1Now[i] += 2;
                 } else if (need == 1) {
                     armCtrl.rotateCtrl[i] = CLOCKWISE_1_DEGREE;
-                    arm1Now[i] += 1;
                 } else if (need == -1) {
                     armCtrl.rotateCtrl[i] = ANTICLOCKWISE_1_DEGREE;
-                    arm1Now[i] -= 1;
                 } else if (need == -2) {
                     armCtrl.rotateCtrl[i] = ANTICLOCKWISE_2_DEGREE;
-                    arm1Now[i] -= 2;
                 } else if (need >= -4) {
                     armCtrl.rotateCtrl[i] = ANTICLOCKWISE_3_DEGREE;
-                    arm1Now[i] -= 3;
                 } else {
                     armCtrl.rotateCtrl[i] = ANTICLOCKWISE_5_DEGREE;
-                    arm1Now[i] -= 5;
                 }
             }
+        }
+        if (target.pos != armPos) {
+            end = false;
+            if (target.pos - armPos >= 10) {
+                armCtrl.moveCtrl = RIGHT_FASTEST;
+            } else if (target.pos - armPos >= 5) {
+                armCtrl.moveCtrl = RIGHT_MIDDLE;
+            } else if (target.pos - armPos >= 3) {
+                armCtrl.moveCtrl = RIGHT_SLOWEST;
+            } else if (armPos - target.pos >= 10) {
+                armCtrl.moveCtrl = LEFT_FASTEST;
+            } else if (armPos - target.pos >= 5) {
+                armCtrl.moveCtrl = LEFT_MIDDLE;
+            } else if (armPos - target.pos >= 3) {
+                armCtrl.moveCtrl = LEFT_SLOWEST;
+            }
+        } else {
+            armCtrl.moveCtrl = NO_MOVE;
         }
         if (end) {
             break;
@@ -91,6 +133,34 @@ void arm1PickUpPlace() {
     // struct ArmState state = {{54, 18, -67, 0, 136, 54}};
     struct ArmState state = {{54, 18, -67, 0, 136, 126}};
     armTo(ARM_1_ADDRESS, state);
+}
+
+/**
+* 机械臂2抓取左侧传送带的角度
+* 270 22 292 0 135 0
+*/
+
+void arm2PickUpPlace() {
+    struct ArmState state = {{90, 22, 292, 0, 135, 0}, 0};
+    armTo(ARM_2_ADDRESS, state);
+}
+
+/**
+* 机械臂2抬高角度
+* 270 320 292 0 135 0
+*/
+void arm2TransformPlace() {
+    struct ArmState state = {{90, 320, 292, 0, 135, 0}, 0};
+    armTo(ARM_2_ADDRESS, state);
+}
+
+/**
+* 机械臂2抬高角度
+* 90 9 293 0 148 0
+*/
+void arm2PickDownPlace() {
+    struct ArmState state = {{270, 9, 293, 0, 148, 0}, 0};
+    armTo(ARM_2_ADDRESS, state);
 }
 
 void arm1Up() {
