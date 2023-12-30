@@ -4,9 +4,28 @@
 
 #include <stdbool.h>
 #include "mechanical_arm.h"
+
+#include <chest.h>
+#include <conveyer_belt.h>
+#include <logger.h>
+
 #include "uart.h"
 #include "constants.h"
 #include "time_utils.h"
+
+enum ChestColor getChestColor() {
+    const unsigned char data = receiveChar();
+    switch (data) {
+        case 'R':
+            return RED;
+        case 'B':
+            return BLUE;
+        case 'G':
+            return GREEN;
+        default:
+            return GREEN;
+    }
+}
 
 int armNow[] = {0, 0, 0, 0, 0, 0};
 int armPos = 0;
@@ -48,6 +67,28 @@ void sendArmCtrl(struct ArmCtrl ctrl) {
     if (ctrl.address == ARM_1_ADDRESS) {
         sendChar(NO_MOVE);
     } else {
+        switch (ctrl.moveCtrl) {
+            case RIGHT_FASTEST:
+                armPos += 10;
+                break;
+            case RIGHT_MIDDLE:
+                armPos += 5;
+                break;
+            case RIGHT_SLOWEST:
+                armPos += 3;
+                break;
+            case LEFT_FASTEST:
+                armPos -= 10;
+                break;
+            case LEFT_MIDDLE:
+                armPos -= 5;
+                break;
+            case LEFT_SLOWEST:
+                armPos -= 3;
+                break;
+            case NO_MOVE:
+                break;
+        }
         sendChar(ctrl.moveCtrl);
     }
 }
@@ -62,8 +103,10 @@ void sendEmptyArmCtrl(enum ArmAddress address) {
 
 void armTo(enum ArmAddress address, struct ArmState target) {
     sendEmptyArmCtrl(address);
-    struct ArmCtrl armCtrl = {address};
+    int sleepTime = 80;
     while (true) {
+        struct ArmCtrl armCtrl = {address};
+        armCtrl.moveCtrl = NO_MOVE;
         bool end = true;
         for (int i = 0; i < AXLE_NUM; ++i) {
             int need = (target.degree[i] - armNow[i]) % 360;
@@ -95,6 +138,18 @@ void armTo(enum ArmAddress address, struct ArmState target) {
                 }
             }
         }
+        if (end) {
+            break;
+        }
+        sendArmCtrl(armCtrl);
+        sleep_ms(sleepTime);
+    }
+    while (true) {
+        struct ArmCtrl armCtrl = {address};
+        for (int i = 0; i < AXLE_NUM; ++i) {
+            armCtrl.rotateCtrl[i] = NO_ROTATE;
+        }
+        bool end = true;
         if (target.pos != armPos) {
             end = false;
             if (target.pos - armPos >= 10) {
@@ -117,7 +172,7 @@ void armTo(enum ArmAddress address, struct ArmState target) {
             break;
         }
         sendArmCtrl(armCtrl);
-        sleep_ms(80);
+        sleep_ms(sleepTime);
     }
     sendEmptyArmCtrl(address);
 }
@@ -159,22 +214,39 @@ void arm2TransformPlace() {
 * 90 9 293 0 148 0
 */
 void arm2PickDownPlace() {
-    struct ArmState state = {{270, 9, 293, 0, 148, 0}, 0};
+    enum ChestColor color = getChestColor();
+    int pos = 0;
+    const int RedOrBluePos = 230;
+    switch (color) {
+        case RED:
+            pos = RedOrBluePos;
+            break;
+        case GREEN:
+            break;
+        case BLUE:
+            pos = -RedOrBluePos;
+    }
+    struct ArmState state = {{270, 9, 293, 0, 148, 0}, pos};
     armTo(ARM_2_ADDRESS, state);
 }
 
-enum ChestColor getChestColor() {
-    const unsigned char data = receiveChar();
-    switch (data) {
-        case 'R':
-            return RED;
-        case 'B':
-            return BLUE;
-        case 'G':
-            return GREEN;
-        default:
-            return GREEN;
-    }
+void arm2TransformChest() {
+    LOG("DEBUG", "%s", "Chest2 out");
+    sendChestCtrl(NO_CHEST, OUT_CHEST, NO_CHEST);
+    LOG("DEBUG", "%s", "OPEN_BELT3");
+    sendConveyerBeltCtrl(NO_BELT, OPEN_BELT);
+    LOG("DEBUG", "%s", "arm2PickUpPlace");
+    arm2PickUpPlace();
+    sleep_ms(9000);
+    LOG("DEBUG", "%s", "arm2 suck");
+    sendSuckCtrl(NO_SUCK_ACTION, DO_SUCK, NO_SUCK_ACTION);
+    printf("%c\n", receiveChar());
+    LOG("DEBUG", "%s", "arm2TransformPlace");
+    arm2TransformPlace();
+    LOG("DEBUG", "%s", "arm2PickDownPlace");
+    arm2PickDownPlace();
+    LOG("DEBUG", "%s", "arm2 unsuck");
+    sendSuckCtrl(NO_SUCK_ACTION, UNDO_SUCK, NO_SUCK_ACTION);
 }
 
 void arm1Up() {

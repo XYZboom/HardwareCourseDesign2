@@ -74,7 +74,7 @@ void arm2TransformPlace();
 
 void arm2PickDownPlace();
 
-enum ChestColor getChestColor();
+void arm2TransformChest();
 
 void sendSuckCtrl(enum ArmSuckCtrl ctrl1, enum ArmSuckCtrl ctrl2, enum ArmSuckCtrl ctrl3);
 
