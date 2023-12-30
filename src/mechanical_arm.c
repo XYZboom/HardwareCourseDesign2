@@ -5,9 +5,9 @@
 #include <stdbool.h>
 #include "mechanical_arm.h"
 
-#include <chest.h>
-#include <conveyer_belt.h>
-#include <logger.h>
+#include "chest.h"
+#include "conveyer_belt.h"
+#include "logger.h"
 
 #include "uart.h"
 #include "constants.h"
@@ -15,6 +15,7 @@
 
 enum ChestColor getChestColor() {
     const unsigned char data = receiveChar();
+    LOG("DEBUG", "getChestColor %c", data);
     switch (data) {
         case 'R':
             return RED;
@@ -231,6 +232,8 @@ void arm2PickDownPlace() {
 }
 
 void arm2TransformChest() {
+    sleep_ms(4000);
+    clearData();
     LOG("DEBUG", "%s", "Chest2 out");
     sendChestCtrl(NO_CHEST, OUT_CHEST, NO_CHEST);
     LOG("DEBUG", "%s", "OPEN_BELT3");
@@ -238,15 +241,18 @@ void arm2TransformChest() {
     LOG("DEBUG", "%s", "arm2PickUpPlace");
     arm2PickUpPlace();
     sleep_ms(9000);
+    clearData();
     LOG("DEBUG", "%s", "arm2 suck");
     sendSuckCtrl(NO_SUCK_ACTION, DO_SUCK, NO_SUCK_ACTION);
-    printf("%c\n", receiveChar());
+    // printf("%c\n", receiveChar());
     LOG("DEBUG", "%s", "arm2TransformPlace");
     arm2TransformPlace();
     LOG("DEBUG", "%s", "arm2PickDownPlace");
     arm2PickDownPlace();
     LOG("DEBUG", "%s", "arm2 unsuck");
     sendSuckCtrl(NO_SUCK_ACTION, UNDO_SUCK, NO_SUCK_ACTION);
+    sleep_ms(4000);
+    clearData();
 }
 
 void arm1Up() {

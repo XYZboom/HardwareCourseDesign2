@@ -3,7 +3,7 @@ project(design2_project C)
 
 set(CMAKE_C_STANDARD 11)
 set(CMAKE_RUNTIME_OUTPUT_DIRECTORY "${CMAKE_CURRENT_SOURCE_DIR}/Debug")
-include_directories(include)
+include_directories(src)
 
 add_definitions(-DSIMULATION)
 

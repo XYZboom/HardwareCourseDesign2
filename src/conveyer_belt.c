@@ -3,8 +3,8 @@
 //
 #include "conveyer_belt.h"
 
-#include <constants.h>
-#include <uart.h>
+#include "constants.h"
+#include "uart.h"
 
 void sendConveyerBeltCtrl(enum ConveyerBeltCtrl ctrl2, enum ConveyerBeltCtrl ctrl3) {
     sendChar(MODBUS_PREAMBLE);
