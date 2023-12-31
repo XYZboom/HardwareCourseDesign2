@@ -12,9 +12,14 @@
 int main() {
     init();
     struct ArmCtrl ctrl = {ARM_1_ADDRESS, {NO_ROTATE, CLOCKWISE_5_DEGREE, NO_ROTATE, NO_ROTATE, NO_ROTATE, NO_ROTATE}};
-    struct CarAndDoorCtrl cdCtrl = defaultCarAndDoorCtrl();
-    cdCtrl.door1 = DOOR_UP;
-    cdCtrl.tower = TOWER_CLOCKWISE;
+    struct CarAndDoorState state;
+    state.carX = -10;
+    state.carAngle = 0;
+    state.carY = 0;
+    state.door1Height = 0;
+    state.door2Height = 0;
+    state.door3Height = 0;
+    state.carLiftingRodHeight = 0;
     while (true) {
         /*for (int i = 0; i < 100; ++i) {
             showLed(i);
@@ -23,6 +28,7 @@ int main() {
         /*for (int i = 0; i < 20; ++i) {
             sendCarAndDoorCtrl(cdCtrl);
         }*/
+        carAndDoorTo(state);
         for (int i = 0; i < 5; ++i) {
             arm2TransformChest();
             sleep_ms(1000);
