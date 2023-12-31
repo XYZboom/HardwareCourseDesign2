@@ -47,8 +47,20 @@ struct CarAndDoorCtrl {
     enum DoorCtrl door3;
 };
 
+struct CarAndDoorState {
+    float carX;
+    float carY;
+    float carAngle;
+    float carLiftingRodHeight;
+    float door1Height;
+    float door2Height;
+    float door3Height;
+};
+
 void sendCarAndDoorCtrl(struct CarAndDoorCtrl ctrl);
 
 struct CarAndDoorCtrl defaultCarAndDoorCtrl();
+
+void carAndDoorTo(struct CarAndDoorState state);
 
 #endif //CAR_AND_DOOR_H
