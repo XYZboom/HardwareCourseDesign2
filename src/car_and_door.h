@@ -6,6 +6,7 @@
 #define CAR_AND_DOOR_H
 
 #define CAR_AND_DOOR_CTRL_ADDRESS ((unsigned char) 0x33)
+#include <stdbool.h>
 
 enum CarXMoveCtrl {
     NO_X_MOVE = 0x30,
@@ -57,10 +58,38 @@ struct CarAndDoorState {
     float door3Height;
 };
 
+enum CarPositionType {
+    RED_BEGIN,
+    GREEN_BEGIN,
+    BLUE_BEGIN,
+    BEFORE,
+    AFTER,
+    RED_END,
+    GREEN_END,
+    BLUE_END
+};
+
 void sendCarAndDoorCtrl(struct CarAndDoorCtrl ctrl);
 
 struct CarAndDoorCtrl defaultCarAndDoorCtrl();
 
 void carAndDoorTo(struct CarAndDoorState state);
+
+enum CarPositionType getCarPositionType(struct CarAndDoorState state);
+
+extern struct CarAndDoorState CarAndDoorStateNow;
+
+extern const float carBeforeX;
+extern const float carBeginX;
+extern const float carRedBeginY;
+extern const float carGreenBeginY;
+extern const float carBlueBeginY;
+extern const float carBeforeAndAfterY;
+extern const float carEndY;
+extern const float carRedEndX;
+extern const float carGreenEndX;
+extern const float carBlueEndX;
+
+struct CarAndDoorState getTarget(bool *arrive, struct CarAndDoorState target);
 
 #endif //CAR_AND_DOOR_H

@@ -24,8 +24,12 @@ void initGPIO() {
 }
 
 bool sw(const int num) {
+#ifndef SIMULATION
 	const unsigned int data = DATA_2_RO;
     return (data & (0x1000 >> num)) == (0x1000 >> num);
+#else
+	return true;
+#endif
 }
 
 bool isBtn8On() {

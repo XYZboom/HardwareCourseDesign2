@@ -8,6 +8,8 @@
 
 int getSpeedType();
 
-enum ArmRotateCtrl rotateCtrlFromSpeed(int speed, bool anticlock);
+enum ArmRotateCtrl armRotateCtrlFromSpeed(int speed, bool anticlock);
+
+enum ArmMoveCtrl armMoveCtrlFromSpeed(int speed, bool left);
 
 #endif //MANUAL_H
