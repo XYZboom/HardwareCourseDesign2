@@ -31,6 +31,16 @@ enum ChestColor getChestColor() {
 int armNow[] = {0, 0, 0, 0, 0, 0};
 int armPos = 0;
 
+struct ArmCtrl defaultArmCtrl(enum ArmAddress address) {
+    struct ArmCtrl ctrl;
+    ctrl.address = address;
+    ctrl.moveCtrl = NO_MOVE;
+    for (int i = 0; i < AXLE_NUM; ++i) {
+        ctrl.rotateCtrl[i] = NO_ROTATE;
+    }
+    return ctrl;
+}
+
 void sendArmCtrl(struct ArmCtrl ctrl) {
     sendChar(MODBUS_PREAMBLE);
     sendChar(ctrl.address);

@@ -55,6 +55,8 @@ enum ChestColor {
     GREEN
 };
 
+struct ArmCtrl defaultArmCtrl(enum ArmAddress address);
+
 void sendArmCtrl(struct ArmCtrl ctrl);
 
 struct ArmState {
