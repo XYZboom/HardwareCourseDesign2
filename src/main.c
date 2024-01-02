@@ -1,7 +1,13 @@
+#include "constants.h"
+
+#include "gpio.h"
+
 #include "car_and_door.h"
 #include "conveyer_belt.h"
 #include "logger.h"
 #include <stdbool.h>
+#include <stdio.h>
+
 #include "uart.h"
 
 #include "init.h"
@@ -21,17 +27,20 @@ int main() {
     state.door3Height = 0;
     state.carLiftingRodHeight = 0;
     while (true) {
-        /*for (int i = 0; i < 100; ++i) {
+        DATA_2 = DATA_2 | 0x00006000;
+        while (sw(0)) {
+            /*for (int i = 0; i < 100; ++i) {
             showLed(i);
             sleep_ms(200);
         }*/
-        /*for (int i = 0; i < 20; ++i) {
+            /*for (int i = 0; i < 20; ++i) {
             sendCarAndDoorCtrl(cdCtrl);
         }*/
-        carAndDoorTo(state);
-        for (int i = 0; i < 5; ++i) {
-            arm2TransformChest();
-            sleep_ms(1000);
+            carAndDoorTo(state);
+            for (int i = 0; i < 5; ++i) {
+                arm2TransformChest();
+                sleep_ms(1000);
+            }
         }
     }
 #ifdef SIMULATION

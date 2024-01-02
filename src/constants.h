@@ -8,6 +8,27 @@
 //<editor-fold desc="MIO">
 #define __MIO_PIN(N) (* (volatile unsigned long *) (0xF800700 + (N << 2)))
 
+//设置 GPIO端口方向寄存器地址
+#define DIRM_0			(*(volatile unsigned int *) 0xE000A204)
+#define DIRM_1			(*(volatile unsigned int *) 0xE000A244)
+#define DIRM_2			(*(volatile unsigned int *) 0xE000A284)
+#define DIRM_3			(*(volatile unsigned int *) 0xE000A2C4)
+//设置 GPIO端口输出使能寄存器地址
+#define OEN_0			(*(volatile unsigned int *) 0xE000A208)
+#define OEN_1			(*(volatile unsigned int *) 0xE000A248)
+#define OEN_2			(*(volatile unsigned int *) 0xE000A288)
+#define OEN_3			(*(volatile unsigned int *) 0xE000A2C8)
+//设置 GPIO端口输出寄存器地址
+#define DATA_0			(*(volatile unsigned int *) 0xE000A040)
+#define DATA_1			(*(volatile unsigned int *) 0xE000A044)
+#define DATA_2			(*(volatile unsigned int *) 0xE000A048)
+#define DATA_3			(*(volatile unsigned int *) 0xE000A04C)
+//设置 GPIO端口输入寄存器地址
+#define DATA_0_RO		(*(volatile unsigned int *) 0xE000A060)
+#define DATA_1_RO		(*(volatile unsigned int *) 0xE000A064)
+#define DATA_2_RO		(*(volatile unsigned int *) 0xE000A068)
+#define DATA_3_RO		(*(volatile unsigned int *) 0xE000A06C)
+
 #define MIO_PIN_0 __MIO_PIN(0)
 #define MIO_PIN_1 __MIO_PIN(1)
 #define MIO_PIN_2 __MIO_PIN(2)

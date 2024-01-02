@@ -3,6 +3,9 @@
 //
 
 #include "init.h"
+
+#include "gpio.h"
+
 #include "constants.h"
 #include "logger.h"
 
@@ -68,6 +71,7 @@ void init() {
 	}
 #else
 	initUart();
+	initGPIO();
 #endif
 }
 
