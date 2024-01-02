@@ -4,10 +4,15 @@
 
 #include "car_and_door.h"
 
+#include <math.h>
+
+#include "mechanical_arm.h"
+
 #include "time_utils.h"
 
 #include "constants.h"
 #include "uart.h"
+#include "gpio.h"
 
 struct CarAndDoorState CarAndDoorStateNow;
 
@@ -17,16 +22,62 @@ const float carYMovePerFrame = 1.0f;
 const float carLRMovePerFrame = 1.0f;
 const float carRotatePerFrame = 5.0f;
 
+const float carLRHeight = 5.0f;
+const float doorHeight = 10.0f;
 const float carBeforeX = -10.0f;
 const float carBeginX = 2.6f;
 const float carRedBeginY = -19.9f;
 const float carGreenBeginY = 3.15f;
-const float carBlueBeginY = 25.9f;
+const float carBlueBeginY = 26.9f;
 const float carBeforeAndAfterY = 32.9f;
 const float carEndY = 68.25;
 const float carRedEndX = -25.0f;
 const float carGreenEndX = -45.0f;
 const float carBlueEndX = -66.5f;
+
+struct CarAndDoorState MainStart = {
+    carBeforeX, 0, 0, 0, 0, 0, 0
+};
+
+struct CarAndDoorState RedBeginLRDown = {
+    carBeginX, carRedBeginY, 0, carLRMovePerFrame, 0, 0, 0
+};
+
+struct CarAndDoorState RedBeginLRUp = {
+    carBeginX, carRedBeginY, 0, carLRHeight, 0, 0, 0
+};
+
+struct CarAndDoorState GreenBeginLRDown = {
+    carBeginX, carGreenBeginY, 0, carLRMovePerFrame, 0, 0, 0
+};
+struct CarAndDoorState GreenBeginLRUp = {
+    carBeginX, carGreenBeginY, 0, carLRHeight, 0, 0, 0
+};
+struct CarAndDoorState BlueBeginLRDown = {
+    carBeginX, carBlueBeginY, 0, carLRMovePerFrame, 0, 0, 0
+};
+struct CarAndDoorState BlueBeginLRUp = {
+    carBeginX, carBlueBeginY, 0, carLRHeight, 0, 0, 0
+};
+struct CarAndDoorState RedEndLRDown = {
+    carRedEndX, carEndY, 90, carLRMovePerFrame, doorHeight, 0, 0
+};
+struct CarAndDoorState RedEndLRUp = {
+    carRedEndX, carEndY, 90, carLRHeight, doorHeight, 0, 0
+};
+struct CarAndDoorState GreenEndLRDown = {
+    carGreenEndX, carEndY, 90, carLRMovePerFrame, 0, doorHeight, 0
+};
+struct CarAndDoorState GreenEndLRUp = {
+    carGreenEndX, carEndY, 90, carLRHeight, 0, doorHeight, 0
+};
+struct CarAndDoorState BlueEndLRDown = {
+    carBlueEndX, carEndY, 90, carLRMovePerFrame, 0, 0, doorHeight
+};
+struct CarAndDoorState BlueEndLRUp = {
+    carBlueEndX, carEndY, 90, carLRHeight, 0, 0, doorHeight
+};
+
 
 void sendCarAndDoorCtrl(struct CarAndDoorCtrl ctrl) {
     sendChar(MODBUS_PREAMBLE);
@@ -75,9 +126,11 @@ void sendCarAndDoorCtrl(struct CarAndDoorCtrl ctrl) {
     }
 }
 
+const float sleep_time_normal = 3;
+
 void carAndDoorTo(struct CarAndDoorState state) {
     struct CarAndDoorCtrl ctrl;
-    while (true) {
+    while (sw(0)) {
         bool end = true;
         if (state.carX - CarAndDoorStateNow.carX >= carXMovePerFrame) {
             end = false;
@@ -115,23 +168,84 @@ void carAndDoorTo(struct CarAndDoorState state) {
         } else {
             ctrl.liftingRod = NO_LR_MOVE;
         }
-        float *doorHeight = &state.door1Height;
-        float *doorHeightNow = &CarAndDoorStateNow.door1Height;
-        enum DoorCtrl *doorCtrl = &ctrl.door1;
-        for (int i = 0; i < 3; ++i) {
-            if (doorHeight[i] - doorHeightNow[i] >= doorMovePerFrame) {
-                end = false;
-                doorCtrl[i] = DOOR_UP;
-            } else if (doorHeightNow[i] - doorHeight[i] >= doorMovePerFrame) {
-                end = false;
-                doorCtrl[i] = DOOR_DOWN;
-            } else {
-                doorCtrl[i] = NO_DOOR_MOVE;
-            }
+        if (state.door1Height - CarAndDoorStateNow.door1Height >= doorMovePerFrame) {
+            end = false;
+            ctrl.door1 = DOOR_UP;
+        } else if (CarAndDoorStateNow.door1Height - state.door1Height >= doorMovePerFrame) {
+            end = false;
+            ctrl.door1 = DOOR_DOWN;
+        } else {
+            ctrl.door1 = NO_DOOR_MOVE;
+        }
+        if (state.door2Height - CarAndDoorStateNow.door2Height >= doorMovePerFrame) {
+            end = false;
+            ctrl.door2 = DOOR_UP;
+        } else if (CarAndDoorStateNow.door2Height - state.door2Height >= doorMovePerFrame) {
+            end = false;
+            ctrl.door2 = DOOR_DOWN;
+        } else {
+            ctrl.door2 = NO_DOOR_MOVE;
+        }
+        if (state.door3Height - CarAndDoorStateNow.door3Height >= doorMovePerFrame) {
+            end = false;
+            ctrl.door3 = DOOR_UP;
+        } else if (CarAndDoorStateNow.door3Height - state.door3Height >= doorMovePerFrame) {
+            end = false;
+            ctrl.door3 = DOOR_DOWN;
+        } else {
+            ctrl.door3 = NO_DOOR_MOVE;
         }
         if (end) break;
         sendCarAndDoorCtrl(ctrl);
-        sleep_ms(80);
+        sleep_ms(sleep_time_normal);
+    }
+}
+void carTransform(enum ChestColor color) {
+    struct CarAndDoorState target;
+    switch (color) {
+        case RED:
+            target = RedBeginLRUp;
+            break;
+        case BLUE:
+            target = BlueBeginLRUp;
+            break;
+        case GREEN:
+            target = GreenBeginLRUp;
+            break;
+    }
+    bool arrive = false;
+    while (!arrive) {
+        carAndDoorTo(getTarget(&arrive, target));
+        sleep_ms(sleep_time_normal);
+    }
+    target = CarAndDoorStateNow;
+    target.carLiftingRodHeight = 0;
+    carAndDoorTo(target);
+    sendSuckCtrl(NO_SUCK_ACTION, NO_SUCK_ACTION, DO_SUCK);
+    sleep_ms(500);
+    target.carLiftingRodHeight = carLRHeight;
+    switch (color) {
+        case RED:
+            target = RedEndLRUp;
+            break;
+        case BLUE:
+            target = BlueEndLRUp;
+            break;
+        case GREEN:
+            target = GreenEndLRUp;
+            break;
+    }
+    arrive = false;
+    while (!arrive) {
+        carAndDoorTo(getTarget(&arrive, target));
+    }
+    sendSuckCtrl(NO_SUCK_ACTION, NO_SUCK_ACTION, UNDO_SUCK);
+    target = CarAndDoorStateNow;
+    target.carY = carBeforeAndAfterY;
+    carAndDoorTo(target);
+    arrive = false;
+    while (!arrive) {
+        carAndDoorTo(getTarget(&arrive, MainStart));
     }
 }
 
@@ -195,7 +309,7 @@ struct CarAndDoorState getTarget(bool *arrive, struct CarAndDoorState target) {
             switch (getCarPositionType(target)) {
                 case RED_BEGIN:
                     *arrive = false;
-                    if (abs(result.carY - carRedBeginY) < carYMovePerFrame) {
+                    if (fabs(result.carY - carRedBeginY) < carYMovePerFrame) {
                         result.carX = carBeginX;
                         return result;
                     }
@@ -203,7 +317,7 @@ struct CarAndDoorState getTarget(bool *arrive, struct CarAndDoorState target) {
                     return result;
                 case GREEN_BEGIN:
                     *arrive = false;
-                    if (abs(result.carY - carGreenBeginY) < carYMovePerFrame) {
+                    if (fabs(result.carY - carGreenBeginY) < carYMovePerFrame) {
                         result.carX = carBeginX;
                         return result;
                     }
@@ -211,7 +325,7 @@ struct CarAndDoorState getTarget(bool *arrive, struct CarAndDoorState target) {
                     return result;
                 case BLUE_BEGIN:
                     *arrive = false;
-                    if (abs(result.carY - carBlueBeginY) < carYMovePerFrame) {
+                    if (fabs(result.carY - carBlueBeginY) < carYMovePerFrame) {
                         result.carX = carBeginX;
                         return result;
                     }
@@ -219,7 +333,7 @@ struct CarAndDoorState getTarget(bool *arrive, struct CarAndDoorState target) {
                     return result;
                 case RED_END:
                     *arrive = false;
-                    if (abs(result.carY - carBeforeAndAfterY) < carYMovePerFrame) {
+                    if (fabs(result.carY - carBeforeAndAfterY) < carYMovePerFrame) {
                         result.carX = carRedEndX;
                         return result;
                     }
@@ -227,7 +341,7 @@ struct CarAndDoorState getTarget(bool *arrive, struct CarAndDoorState target) {
                     return result;
                 case GREEN_END:
                     *arrive = false;
-                    if (abs(result.carY - carBeforeAndAfterY) < carYMovePerFrame) {
+                    if (fabs(result.carY - carBeforeAndAfterY) < carYMovePerFrame) {
                         result.carX = carGreenEndX;
                         return result;
                     }
@@ -235,13 +349,15 @@ struct CarAndDoorState getTarget(bool *arrive, struct CarAndDoorState target) {
                     return result;
                 case BLUE_END:
                     *arrive = false;
-                    if (abs(result.carY - carBeforeAndAfterY) < carYMovePerFrame) {
+                    if (fabs(result.carY - carBeforeAndAfterY) < carYMovePerFrame) {
                         result.carX = carBlueEndX;
                         return result;
                     }
                     result.carY = carBeforeAndAfterY;
                     return result;
                 case BEFORE:
+                    *arrive = true;
+                    return target;
                 case AFTER:
                     break;
             }
@@ -251,15 +367,17 @@ struct CarAndDoorState getTarget(bool *arrive, struct CarAndDoorState target) {
                 case RED_BEGIN:
                 case GREEN_BEGIN:
                 case BLUE_BEGIN:
-                    if (abs(CarAndDoorStateNow.carX - target.carX) < carXMovePerFrame) {
-                        result.carX = carBeforeX;
+                case BEFORE:
+                    if (fabs(CarAndDoorStateNow.carX - target.carX) < carXMovePerFrame) {
+                        result.carY = carBlueBeginY;
                         return result;
                     }
-                    result.carY = carBlueBeginY;
+                    result.carX = carBeforeX;
+                    return result;
                 case RED_END:
                     *arrive = false;
-                    if (abs(result.carY - carBeforeAndAfterY) < carYMovePerFrame) {
-                        if (abs(result.carX - carRedEndX) < carXMovePerFrame) {
+                    if (fabs(result.carY - carBeforeAndAfterY) < carYMovePerFrame) {
+                        if (fabs(result.carX - carRedEndX) < carXMovePerFrame) {
                             result.carY = carEndY;
                             return result;
                         }
@@ -270,8 +388,8 @@ struct CarAndDoorState getTarget(bool *arrive, struct CarAndDoorState target) {
                     return result;
                 case GREEN_END:
                     *arrive = false;
-                    if (abs(result.carY - carBeforeAndAfterY) < carYMovePerFrame) {
-                        if (abs(result.carX - carRedEndX) < carXMovePerFrame) {
+                    if (fabs(result.carY - carBeforeAndAfterY) < carYMovePerFrame) {
+                        if (fabs(result.carX - carGreenEndX) < carXMovePerFrame) {
                             result.carY = carEndY;
                             return result;
                         }
@@ -282,8 +400,8 @@ struct CarAndDoorState getTarget(bool *arrive, struct CarAndDoorState target) {
                     return result;
                 case BLUE_END:
                     *arrive = false;
-                    if (abs(result.carY - carBeforeAndAfterY) < carYMovePerFrame) {
-                        if (abs(result.carX - carRedEndX) < carXMovePerFrame) {
+                    if (fabs(result.carY - carBeforeAndAfterY) < carYMovePerFrame) {
+                        if (fabs(result.carX - carBlueEndX) < carXMovePerFrame) {
                             result.carY = carEndY;
                             return result;
                         }
@@ -292,14 +410,57 @@ struct CarAndDoorState getTarget(bool *arrive, struct CarAndDoorState target) {
                     }
                     result.carY = carBeforeAndAfterY;
                     return result;
-                case BEFORE:
-                    break;
                 case AFTER:
                     break;
             }
         case RED_END:
             switch (getCarPositionType(target)) {
                 case RED_BEGIN:
+                    *arrive = true;
+                    return result;
+                case GREEN_BEGIN:
+                    break;
+                case BLUE_BEGIN:
+                    break;
+                case BEFORE:
+                    break;
+                case AFTER:
+                    break;
+                case RED_END:
+                    *arrive = true;
+                    return result;
+                case GREEN_END:
+                    break;
+                case BLUE_END:
+                    break;
+            }
+            break;
+        case GREEN_END:
+            switch (getCarPositionType(target)) {
+                case RED_BEGIN:
+                    *arrive = true;
+                    return result;
+                case GREEN_BEGIN:
+                    break;
+                case BLUE_BEGIN:
+                    break;
+                case BEFORE:
+                    break;
+                case AFTER:
+                    break;
+                case RED_END:
+                    break;
+                case GREEN_END:
+                    *arrive = true;
+                    return result;
+                case BLUE_END:
+                    break;
+            }
+            break;
+        case BLUE_END:
+            switch (getCarPositionType(target)) {
+                case RED_BEGIN:
+                    *arrive = true;
                     return result;
                 case GREEN_BEGIN:
                     break;
@@ -314,12 +475,9 @@ struct CarAndDoorState getTarget(bool *arrive, struct CarAndDoorState target) {
                 case GREEN_END:
                     break;
                 case BLUE_END:
-                    break;
+                    *arrive = true;
+                    return result;
             }
-            break;
-        case GREEN_END:
-            break;
-        case BLUE_END:
             break;
     }
 }

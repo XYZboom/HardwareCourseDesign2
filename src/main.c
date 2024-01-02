@@ -1,3 +1,5 @@
+#include "logger.h"
+
 #include "constants.h"
 #include "manual.h"
 #include "gpio.h"
@@ -27,16 +29,20 @@ int main() {
             /*for (int i = 0; i < 20; ++i) {
             sendCarAndDoorCtrl(cdCtrl);
         }*/
-            bool arrive;
+            /*bool arrive;
             while (!arrive) {
                 struct CarAndDoorState stateTo = getTarget(&arrive, state);
                 carAndDoorTo(stateTo);
             }
             state.carY = 32.9f;
-            carAndDoorTo(state);
+            carAndDoorTo(state);*/
+            LOG("DEBUG", "%s", "carAndDoorTo MainStart");
+            carAndDoorTo(MainStart);
             for (int i = 0; i < 5; ++i) {
-                arm2TransformChest();
-                sleep_ms(1000);
+                enum ChestColor color = arm2TransformChest();
+                carTransform(color);
+                arm2Reset();
+                sleep_ms(9000);
             }
         }
         if (!sw(0)) {

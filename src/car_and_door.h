@@ -7,6 +7,7 @@
 
 #define CAR_AND_DOOR_CTRL_ADDRESS ((unsigned char) 0x33)
 #include <stdbool.h>
+#include "mechanical_arm.h"
 
 enum CarXMoveCtrl {
     NO_X_MOVE = 0x30,
@@ -90,6 +91,26 @@ extern const float carRedEndX;
 extern const float carGreenEndX;
 extern const float carBlueEndX;
 
+extern struct CarAndDoorState MainStart;
+// 到位，升高抓手
+extern struct CarAndDoorState RedBeginLRDown;
+// 到位，降低抓手
+extern struct CarAndDoorState RedBeginLRUp;
+extern struct CarAndDoorState GreenBeginLRDown;
+extern struct CarAndDoorState GreenBeginLRUp;
+extern struct CarAndDoorState BlueBeginLRDown;
+extern struct CarAndDoorState BlueBeginLRUp;
+// 到位，升高抓手
+extern struct CarAndDoorState RedEndLRDown;
+// 到位，降低抓手
+extern struct CarAndDoorState RedEndLRUp;
+extern struct CarAndDoorState GreenEndLRDown;
+extern struct CarAndDoorState GreenEndLRUp;
+extern struct CarAndDoorState BlueEndLRDown;
+extern struct CarAndDoorState BlueEndLRUp;
+
 struct CarAndDoorState getTarget(bool *arrive, struct CarAndDoorState target);
+
+void carTransform(enum ChestColor color);
 
 #endif //CAR_AND_DOOR_H

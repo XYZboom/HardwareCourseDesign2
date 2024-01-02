@@ -74,9 +74,11 @@ void arm2PickUpPlace();
 
 void arm2TransformPlace();
 
-void arm2PickDownPlace();
+enum ChestColor arm2PickDownPlace();
 
-void arm2TransformChest();
+enum ChestColor arm2TransformChest();
+
+void arm2Reset();
 
 void sendSuckCtrl(enum ArmSuckCtrl ctrl1, enum ArmSuckCtrl ctrl2, enum ArmSuckCtrl ctrl3);
 

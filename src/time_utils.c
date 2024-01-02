@@ -6,10 +6,5 @@
 #include <unistd.h>
 
 void sleep_ms(long ms) {
-#ifdef SIMULATION
-    ms *= 0.7f;
-#else
-    ms *= 0.8f;
-#endif
     usleep(ms * 1000);
 }

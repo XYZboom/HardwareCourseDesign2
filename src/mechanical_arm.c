@@ -12,6 +12,7 @@
 #include "uart.h"
 #include "constants.h"
 #include "time_utils.h"
+#include "gpio.h"
 
 enum ChestColor getChestColor() {
     const unsigned char data = receiveChar();
@@ -114,8 +115,8 @@ void sendEmptyArmCtrl(enum ArmAddress address) {
 
 void armTo(enum ArmAddress address, struct ArmState target) {
     sendEmptyArmCtrl(address);
-    int sleepTime = 80;
-    while (true) {
+    int sleepTime = 3;
+    while (sw(0)) {
         struct ArmCtrl armCtrl = {address};
         armCtrl.moveCtrl = NO_MOVE;
         bool end = true;
@@ -155,7 +156,7 @@ void armTo(enum ArmAddress address, struct ArmState target) {
         sendArmCtrl(armCtrl);
         sleep_ms(sleepTime);
     }
-    while (true) {
+    while (sw(0)) {
         struct ArmCtrl armCtrl = {address};
         for (int i = 0; i < AXLE_NUM; ++i) {
             armCtrl.rotateCtrl[i] = NO_ROTATE;
@@ -216,7 +217,7 @@ void arm2PickUpPlace() {
 * 270 320 292 0 135 0
 */
 void arm2TransformPlace() {
-    struct ArmState state = {{90, 320, 292, 0, 135, 0}, 0};
+    struct ArmState state = {{armNow[0], 320, armNow[2], armNow[3], armNow[4], armNow[5]}, armPos};
     armTo(ARM_2_ADDRESS, state);
 }
 
@@ -224,7 +225,7 @@ void arm2TransformPlace() {
 * 机械臂2抬高角度
 * 90 9 293 0 148 0
 */
-void arm2PickDownPlace() {
+enum ChestColor arm2PickDownPlace() {
     enum ChestColor color = getChestColor();
     int pos = 0;
     const int RedOrBluePos = 230;
@@ -239,35 +240,48 @@ void arm2PickDownPlace() {
     }
     struct ArmState state = {{270, 9, 293, 0, 148, 0}, pos};
     armTo(ARM_2_ADDRESS, state);
+    return color;
 }
 
-void arm2TransformChest() {
-    sleep_ms(4000);
+enum ChestColor arm2TransformChest() {
     clearData();
     LOG("DEBUG", "%s", "Chest2 out");
     sendChestCtrl(NO_CHEST, OUT_CHEST, NO_CHEST);
+    sleep_ms(2);
     LOG("DEBUG", "%s", "OPEN_BELT3");
     sendConveyerBeltCtrl(NO_BELT, OPEN_BELT);
+    sleep_ms(2);
     LOG("DEBUG", "%s", "arm2PickUpPlace");
     arm2PickUpPlace();
     clearData();
-    sleep_ms(9000);
+    sleep_ms(6000);
     LOG("DEBUG", "%s", "arm2 suck");
     sendSuckCtrl(NO_SUCK_ACTION, DO_SUCK, NO_SUCK_ACTION);
     // printf("%c\n", receiveChar());
     LOG("DEBUG", "%s", "arm2TransformPlace");
     arm2TransformPlace();
     LOG("DEBUG", "%s", "arm2PickDownPlace");
-    arm2PickDownPlace();
+    enum ChestColor color = arm2PickDownPlace();
     LOG("DEBUG", "%s", "arm2 unsuck");
     sendSuckCtrl(NO_SUCK_ACTION, UNDO_SUCK, NO_SUCK_ACTION);
-    sleep_ms(4000);
+    LOG("DEBUG", "%s", "arm2TransformPlace");
+    arm2TransformPlace();
     clearData();
+    return color;
 }
 
 void arm1Up() {
     struct ArmState state = {{0, 0, -90, 0, 180, 0}};
     armTo(ARM_1_ADDRESS, state);
+}
+
+void arm2Reset() {
+    struct ArmState state;
+    for (int i = 0; i < AXLE_NUM; ++i) {
+        state.degree[i] = 0;
+    }
+    state.pos = 0;
+    armTo(ARM_2_ADDRESS, state);
 }
 
 void sendSuckCtrl(enum ArmSuckCtrl ctrl1, enum ArmSuckCtrl ctrl2, enum ArmSuckCtrl ctrl3) {
