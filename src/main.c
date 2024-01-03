@@ -41,20 +41,20 @@ int main() {
             carAndDoorTo(MainStart);
             for (int i = 0; i < 5; ++i) {
 #ifndef SIMULATION
-                DATA_2 = (DATA_2 & ~0x1FE000) | 0x100000;
+                DATA_0 = (DATA_0 & ~0x80) | 0x80;
 #endif
                 enum ChestColor color = arm2TransformChest();
                 carTransform(color);
                 arm2Reset();
                 if (!sw(0)) {
 #ifndef SIMULATION
-                    DATA_2 = (DATA_2 & ~0x1FE000) | 0x000000;
+                DATA_0 = (DATA_0 & ~0x80) | 0x00;
 #endif
                     break;
                 }
                 sleep_ms(9000);
 #ifndef SIMULATION
-                DATA_2 = (DATA_2 & ~0x1FE000) | 0x000000;
+                DATA_0 = (DATA_0 & ~0x80) | 0x80;
 #endif
             }
         }
@@ -135,8 +135,8 @@ int main() {
             }
         }
 #ifndef SIMULATION
-        // int ledCtrl = 0x100000 >> getCarPositionType(CarAndDoorStateNow);
-        // DATA_2 = (DATA_2 & ~0x1FE000) | ledCtrl;
+        int ledCtrl = 0x100000 >> getCarPositionType(CarAndDoorStateNow);
+        DATA_2 = (DATA_2 & ~0x1FE000) | ledCtrl;
 #endif
     }
 #ifdef SIMULATION

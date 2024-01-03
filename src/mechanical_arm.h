@@ -74,7 +74,9 @@ void arm2PickUpPlace();
 
 void arm2TransformPlace();
 
-enum ChestColor arm2PickDownPlace();
+enum ChestColor arm2ChestPos();
+
+void arm2PickDownPlace();
 
 enum ChestColor arm2TransformChest();
 

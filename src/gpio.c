@@ -9,6 +9,10 @@
 void initGPIO() {
 #ifdef SIMULATION
 #else
+	//配置及初始化MIO07引脚的相关寄存器，MIO07作为LED灯控制的输出引脚
+	MIO_PIN_7 = 0x00003600;
+	DIRM_0 = DIRM_0|0x00000080;
+	OEN_0 = OEN_0|0x00000080;
     //配置及初始化MIO50、MIO51引脚的相关寄存器，MIO50、MIO51作为按键输入引脚
     MIO_PIN_50 = 0x00003600;
     MIO_PIN_51 = 0x00003600;
