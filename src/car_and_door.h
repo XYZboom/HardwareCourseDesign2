@@ -91,6 +91,7 @@ extern const float carRedEndX;
 extern const float carGreenEndX;
 extern const float carBlueEndX;
 
+extern struct CarAndDoorState Reset;
 extern struct CarAndDoorState MainStart;
 // 到位，升高抓手
 extern struct CarAndDoorState RedBeginLRDown;

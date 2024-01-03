@@ -35,47 +35,64 @@ const float carRedEndX = -25.0f;
 const float carGreenEndX = -45.0f;
 const float carBlueEndX = -66.5f;
 
+#define CAR_BEFORE_X (-10.0f)
+#define CAR_BEGIN_X (2.6f)
+#define CAR_RED_BEGIN_Y (-19.9f)
+#define CAR_GREEN_BEGIN_Y (3.15f)
+#define CAR_BLUE_BEGIN_Y (26.9f)
+#define CAR_LR_MOVE_PER_FRAME (1.0f)
+#define CAR_RED_END_X (-25.0f)
+#define CAR_GREEN_END_X (-45.0f)
+#define CAR_BLUE_END_X (-66.5f)
+#define CAR_END_Y (65.25f)
+#define CAR_LR_HEIGHT (5.0f)
+#define DOOR_HEIGHT (10.0f)
+
+struct CarAndDoorState Reset = {
+    0, 0, 0, 0, 0, 0, 0
+};
+
 struct CarAndDoorState MainStart = {
-    carBeforeX, 0, 0, 0, 0, 0, 0
+    CAR_BEFORE_X, 0, 0, 0, 0, 0, 0
 };
 
 struct CarAndDoorState RedBeginLRDown = {
-    carBeginX, carRedBeginY, 0, carLRMovePerFrame, 0, 0, 0
+    CAR_BEGIN_X, CAR_RED_BEGIN_Y, 0, CAR_LR_MOVE_PER_FRAME, 0, 0, 0
 };
 
 struct CarAndDoorState RedBeginLRUp = {
-    carBeginX, carRedBeginY, 0, carLRHeight, 0, 0, 0
+    CAR_BEGIN_X, CAR_RED_BEGIN_Y, 0, CAR_LR_HEIGHT, 0, 0, 0
 };
 
 struct CarAndDoorState GreenBeginLRDown = {
-    carBeginX, carGreenBeginY, 0, carLRMovePerFrame, 0, 0, 0
+    CAR_BEGIN_X, CAR_GREEN_BEGIN_Y, 0, CAR_LR_MOVE_PER_FRAME, 0, 0, 0
 };
 struct CarAndDoorState GreenBeginLRUp = {
-    carBeginX, carGreenBeginY, 0, carLRHeight, 0, 0, 0
+    CAR_BEGIN_X, CAR_GREEN_BEGIN_Y, 0, CAR_LR_HEIGHT, 0, 0, 0
 };
 struct CarAndDoorState BlueBeginLRDown = {
-    carBeginX, carBlueBeginY, 0, carLRMovePerFrame, 0, 0, 0
+    CAR_BEGIN_X, CAR_BLUE_BEGIN_Y, 0, CAR_LR_MOVE_PER_FRAME, 0, 0, 0
 };
 struct CarAndDoorState BlueBeginLRUp = {
-    carBeginX, carBlueBeginY, 0, carLRHeight, 0, 0, 0
+    CAR_BEGIN_X, CAR_BLUE_BEGIN_Y, 0, CAR_LR_HEIGHT, 0, 0, 0
 };
 struct CarAndDoorState RedEndLRDown = {
-    carRedEndX, carEndY, 90, carLRMovePerFrame, doorHeight, 0, 0
+    CAR_RED_END_X, CAR_END_Y, 90, CAR_LR_MOVE_PER_FRAME, DOOR_HEIGHT, 0, 0
 };
 struct CarAndDoorState RedEndLRUp = {
-    carRedEndX, carEndY, 90, carLRHeight, doorHeight, 0, 0
+    CAR_RED_END_X, CAR_END_Y, 90, CAR_LR_HEIGHT, DOOR_HEIGHT, 0, 0
 };
 struct CarAndDoorState GreenEndLRDown = {
-    carGreenEndX, carEndY, 90, carLRMovePerFrame, 0, doorHeight, 0
+    CAR_GREEN_END_X, CAR_END_Y, 90, CAR_LR_MOVE_PER_FRAME, 0, DOOR_HEIGHT, 0
 };
 struct CarAndDoorState GreenEndLRUp = {
-    carGreenEndX, carEndY, 90, carLRHeight, 0, doorHeight, 0
+    CAR_GREEN_END_X, CAR_END_Y, 90, CAR_LR_HEIGHT, 0, DOOR_HEIGHT, 0
 };
 struct CarAndDoorState BlueEndLRDown = {
-    carBlueEndX, carEndY, 90, carLRMovePerFrame, 0, 0, doorHeight
+    CAR_BLUE_END_X, CAR_END_Y, 90, CAR_LR_MOVE_PER_FRAME, 0, 0, DOOR_HEIGHT
 };
 struct CarAndDoorState BlueEndLRUp = {
-    carBlueEndX, carEndY, 90, carLRHeight, 0, 0, doorHeight
+    CAR_BLUE_END_X, CAR_END_Y, 90, CAR_LR_HEIGHT, 0, 0, DOOR_HEIGHT
 };
 
 
@@ -130,7 +147,7 @@ const float sleep_time_normal = 3;
 
 void carAndDoorTo(struct CarAndDoorState state) {
     struct CarAndDoorCtrl ctrl;
-    while (sw(0)) {
+    while (sw(0) || (sw(1) && sw(2))) {
         bool end = true;
         if (state.carX - CarAndDoorStateNow.carX >= carXMovePerFrame) {
             end = false;
@@ -200,6 +217,7 @@ void carAndDoorTo(struct CarAndDoorState state) {
         sleep_ms(sleep_time_normal);
     }
 }
+
 void carTransform(enum ChestColor color) {
     struct CarAndDoorState target;
     switch (color) {
@@ -215,6 +233,9 @@ void carTransform(enum ChestColor color) {
     }
     bool arrive = false;
     while (!arrive) {
+        if (!(sw(0) || (sw(1) && sw(2)))) {
+            break;
+        }
         carAndDoorTo(getTarget(&arrive, target));
         sleep_ms(sleep_time_normal);
     }
@@ -237,6 +258,9 @@ void carTransform(enum ChestColor color) {
     }
     arrive = false;
     while (!arrive) {
+        if (!(sw(0) || (sw(1) && sw(2)))) {
+            break;
+        }
         carAndDoorTo(getTarget(&arrive, target));
     }
     sendSuckCtrl(NO_SUCK_ACTION, NO_SUCK_ACTION, UNDO_SUCK);
@@ -244,7 +268,10 @@ void carTransform(enum ChestColor color) {
     target.carY = carBeforeAndAfterY;
     carAndDoorTo(target);
     arrive = false;
-    while (!arrive) {
+    while (!arrive ) {
+        if (!(sw(0) || (sw(1) && sw(2)))) {
+            break;
+        }
         carAndDoorTo(getTarget(&arrive, MainStart));
     }
 }

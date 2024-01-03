@@ -115,8 +115,8 @@ void sendEmptyArmCtrl(enum ArmAddress address) {
 
 void armTo(enum ArmAddress address, struct ArmState target) {
     sendEmptyArmCtrl(address);
-    int sleepTime = 3;
-    while (sw(0)) {
+    int sleepTime = 8;
+    while (sw(0) || (sw(1) && sw(2))) {
         struct ArmCtrl armCtrl = {address};
         armCtrl.moveCtrl = NO_MOVE;
         bool end = true;
@@ -156,7 +156,7 @@ void armTo(enum ArmAddress address, struct ArmState target) {
         sendArmCtrl(armCtrl);
         sleep_ms(sleepTime);
     }
-    while (sw(0)) {
+    while (sw(0) || (sw(1) && sw(2))) {
         struct ArmCtrl armCtrl = {address};
         for (int i = 0; i < AXLE_NUM; ++i) {
             armCtrl.rotateCtrl[i] = NO_ROTATE;
